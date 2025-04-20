@@ -5,13 +5,10 @@ from langgraph.graph import END, START, StateGraph
 from langchain_core.prompts import ChatPromptTemplate ,  MessagesPlaceholder
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.output_parsers import StrOutputParser
-from langchain_community.vectorstores import FAISS
-
 from preprocessing import prepro_data
 from retriever import get_retriever
 from embedding import load_embedding_model , load_vector_db , load_pdf_docs , load_csv_docs
-from generate import generate_response
-
+from generate import load_llm , generate_response
 
 # data load 
 data = prepro_data(path = './data/prepro_data.csv') 
@@ -20,7 +17,6 @@ data = prepro_data(path = './data/prepro_data.csv')
 csv_dataset = load_csv_docs(data = data)
 pdf_dataset = load_pdf_docs(pdf_path = './pdf2txt/')
 
-
 # embedding model
 hf_embeddings = load_embedding_model(model_name = "intfloat/multilingual-e5-large") 
 
@@ -28,8 +24,10 @@ hf_embeddings = load_embedding_model(model_name = "intfloat/multilingual-e5-larg
 pdf_db , qa_db = load_vector_db(hf_embeddings) 
 
 # retriever  
-pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , k = 3 , pdf_dataset , csv_dataset) 
+pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , 3 , pdf_dataset , csv_dataset) 
 
+#load llm 
+llm = load_llm()
 
 class GraphState(TypedDict) :
     question : str
@@ -76,7 +74,7 @@ def retrieve(state) :
     
     example_prompt = []
     
-    for i , doc in enumeerate(csv_docs) :
+    for i , doc in enumerate(csv_docs) :
         
         context = doc.page_content
         question = doc.metadata['question']
@@ -84,7 +82,7 @@ def retrieve(state) :
       
         example_prompt.append(f'question:{context} {question}\nanswer:{answer}\n\n')
 
-  return {"pdf_docs" : pdf_docs , "csv_docs" : example_prompt , "question" : csv_question , "pdf_question" : pdf_question}
+    return {"pdf_docs" : pdf_docs , "csv_docs" : example_prompt , "question" : csv_question , "pdf_question" : pdf_question}
 
 def generate(state) :
 
@@ -94,11 +92,9 @@ def generate(state) :
 
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
-
-    rag_chain = generate_response(pdf_docs, csv_docs, question) 
     
-    generation = rag_chain.invoke({"pdf_docs": pdf_docs, "csv_docs" : csv_docs ,"question": question})
-
+    generation = generate_response(llm , pdf_docs, csv_docs, question) 
+    
     return {"pdf_docs" : pdf_docs , "csv_docs" : csv_docs , "question" : question , "generation" : generation}
 
 def grade_documents(state) :
@@ -150,6 +146,7 @@ def grade_documents(state) :
 
     if not filtered_pdf_docs:
         print("참조할 안전보건지침서가 없습니다.")
+        filtered_pdf_docs.append("사고 관련 안전 지침서 없음.")
 
     return {"pdf_docs" : filtered_pdf_docs , "pdf_question" : pdf_question}
 
