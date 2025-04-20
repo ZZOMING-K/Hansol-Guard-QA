@@ -93,7 +93,10 @@ def generate(state) :
 
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
-
+    
+    if not pdf_docs : 
+      pdf_docs = "사고 관련 안전 지침서 없음."
+    
     rag_chain = generate_response(llm , pdf_docs, csv_docs, question) 
     
     generation = rag_chain.invoke({"pdf_docs": pdf_docs, "csv_docs" : csv_docs ,"question": question})
