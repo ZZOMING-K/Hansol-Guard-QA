@@ -93,10 +93,8 @@ def generate(state) :
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
     
-    rag_chain = generate_response(llm , pdf_docs, csv_docs, question) 
+    generation = generate_response(llm , pdf_docs, csv_docs, question) 
     
-    generation = rag_chain.invoke({"pdf_docs": pdf_docs, "csv_docs" : csv_docs ,"question": question})
-
     return {"pdf_docs" : pdf_docs , "csv_docs" : csv_docs , "question" : question , "generation" : generation}
 
 def grade_documents(state) :
