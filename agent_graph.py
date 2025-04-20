@@ -17,7 +17,6 @@ data = prepro_data(path = './data/prepro_data.csv')
 csv_dataset = load_csv_docs(data = data)
 pdf_dataset = load_pdf_docs(pdf_path = './pdf2txt/')
 
-
 # embedding model
 hf_embeddings = load_embedding_model(model_name = "intfloat/multilingual-e5-large") 
 
@@ -94,9 +93,6 @@ def generate(state) :
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
     
-    if not pdf_docs : 
-      pdf_docs = "사고 관련 안전 지침서 없음."
-    
     rag_chain = generate_response(llm , pdf_docs, csv_docs, question) 
     
     generation = rag_chain.invoke({"pdf_docs": pdf_docs, "csv_docs" : csv_docs ,"question": question})
@@ -152,6 +148,7 @@ def grade_documents(state) :
 
     if not filtered_pdf_docs:
         print("참조할 안전보건지침서가 없습니다.")
+        filtered_pdf_docs.append("사고 관련 안전 지침서 없음.")
 
     return {"pdf_docs" : filtered_pdf_docs , "pdf_question" : pdf_question}
 
