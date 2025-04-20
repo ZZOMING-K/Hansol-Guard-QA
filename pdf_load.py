@@ -13,7 +13,6 @@ import json
 import os 
 import glob
 
-
 # model load 
 model = Qwen2VLForConditionalGeneration.from_pretrained("allenai/olmOCR-7B-0225-preview", torch_dtype=torch.bfloat16).eval()
 processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")

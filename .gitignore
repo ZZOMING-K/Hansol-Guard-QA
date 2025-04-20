@@ -172,3 +172,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# api 키 저장파일 및 로그는 깃에 push 안함
+.env
+*.log
