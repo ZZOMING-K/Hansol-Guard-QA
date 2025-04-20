@@ -1,17 +1,25 @@
 from langchain_core.prompts import ChatPromptTemplate 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
+import os 
 
-def generate_response(pdf_docs , csv_docs, question) : 
-
+def load_llm(model_id = "gemini-1.5-flash") : 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
+        model= model_id,
         temperature=0.2,
-        google_api_key=os.environ.get('API_KEY')
+        google_api_key=os.environ["GOOGLE_API_KEY"],
     )
+  
+    return llm 
 
-    initial_prompt = ChatPromptTemplate.from_messages([
-        ('system', ("""
+def generate_response(llm_model, pdf_docs , csv_docs, question) : 
+
+    llm = llm_model
+
+    initial_prompt = ChatPromptTemplate.from_messages(
+      [
+
+        ('system', """
         당신은 건설 사고 분석 전문가입니다.
         아래 세 가지 단계에 따라 사고 재발 방지 대책을 생성하세요:
         
@@ -30,7 +38,8 @@ def generate_response(pdf_docs , csv_docs, question) :
         """),
 
         ("human", "사고 질문: {question}")
-    ])
+    ]
+    )
 
     # LLM 체인 구성
     initial_chain = initial_prompt | llm | StrOutputParser()
@@ -66,6 +75,3 @@ def generate_response(pdf_docs , csv_docs, question) :
     })
 
     return final_response
-
-
-
