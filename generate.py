@@ -7,24 +7,6 @@ import os
 load_dotenv()
 
 def load_llm(model_id = "gemini-1.5-flash") : 
-    llm = ChatGoogleGenerativeAI(
-        model= model_id,
-        temperature=0.2,
-        google_api_key=os.environ["GOOGLE_API_KEY"],
-    )
-  
-    return llm 
-
-from langchain_core.prompts import ChatPromptTemplate 
-from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
-import asyncio
-import os 
-
-load_dotenv()
-
-def load_llm(model_id = "gemini-1.5-flash") : 
     
     llm = ChatGoogleGenerativeAI(
         model= model_id,
