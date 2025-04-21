@@ -1,13 +1,7 @@
-from langchain.retrievers import ContextualCompressionRetriever, EnsembleRetriever
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.document_loaders import TextLoader, DirectoryLoader, DataFrameLoader
 from langchain_community.vectorstores.utils import DistanceStrategy
 from langchain_community.vectorstores import FAISS
-from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers.document_compressors import CrossEncoderReranker
-from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-from kiwipiepy import Kiwi
 
 from langchain_text_splitters import KonlpyTextSplitter
 

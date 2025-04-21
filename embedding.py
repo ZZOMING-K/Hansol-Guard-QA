@@ -1,8 +1,3 @@
-import os
-import glob
-import re
-import faiss
-from langchain.docstore.document import Document
 from langchain.document_loaders import DataFrameLoader, DirectoryLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
