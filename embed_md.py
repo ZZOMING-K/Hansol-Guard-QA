@@ -1,12 +1,15 @@
 from typing import List, Tuple
 import os
 import glob
+import numpy as np
 import re
 import pickle
 import faiss
 from langchain.docstore.document import Document
 from langchain_experimental.text_splitter import SemanticChunker
-from sentence_transformers import SentenceTransformer
+
+# from sentence_transformers import SentenceTransformer
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 def load_markdown_files(folder_path: str) -> List[Tuple[str, str]]:
@@ -46,7 +49,7 @@ def custom_md_splitter(md_text: str) -> List[Document]:
 
 
 def semantic_chunk_documents(
-    documents: List[Document], model: SentenceTransformer
+    documents: List[Document], model: HuggingFaceEmbeddings
 ) -> List[str]:
     """
     텍스트를 의미적 유사도 기준으로 청킹하는 함수.
@@ -101,14 +104,16 @@ def process_md_folder(
     - md_folder_path : md 파일이 모여있는 폴더 이름 입력
     - output_dir : 기존 저장되어 잇는 벡터 (md : vectordb/faiss_md_index)
     """
-    model = SentenceTransformer(model_name)
+    model = HuggingFaceEmbeddings(model_name=model_name)
     md_files = load_markdown_files(md_folder_path)
 
     # 기존 인덱스, 메타데이터, 파일경로 목록 로드
     index, metadata, existing_paths = load_existing_faiss(output_dir)
     if index is None:
         print("🔄 새로운 FAISS 인덱스 생성 중...")
-        index = faiss.IndexFlatL2(model.get_sentence_embedding_dimension())
+        sample_vec = model.embed_documents(["임시 문장"])[0]
+        dim = len(sample_vec)
+        index = faiss.IndexFlatL2(dim)
         metadata = []
         existing_paths = set()
 
@@ -128,7 +133,8 @@ def process_md_folder(
         new_metadata.extend([f"{path} | {chunk[:50]}" for chunk in chunks])
 
     if new_chunks:
-        embeddings = model.encode(new_chunks, show_progress_bar=True)
+        embeddings = model.embed_documents(new_chunks)
+        embeddings = np.array(embeddings).astype("float32")
         index.add(embeddings)
         metadata.extend(new_metadata)
         save_faiss(index, metadata, output_dir)
@@ -140,7 +146,7 @@ def search_md_faiss(
     query: str,
     index_dir: str,
     top_k: int = 5,
-    model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+    model_name: str = "intfloat/multilingual-e5-large",
 ) -> List[Tuple[str, float]]:
     """
     마크다운 벡터DB에 질의(query)를 검색하고 유사한 청크 반환
@@ -162,8 +168,9 @@ def search_md_faiss(
         metadata = pickle.load(f)
 
     # 질의 임베딩
-    model = SentenceTransformer(model_name)
-    query_vector = model.encode([query])
+    model = HuggingFaceEmbeddings(model_name=model_name)
+    query_vector = model.embed_query(query)
+    query_vector = np.array([query_vector]).astype("float32")
 
     # 검색
     distances, indices = index.search(query_vector, top_k)
