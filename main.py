@@ -14,6 +14,7 @@ def main() :
     with st.sidebar : 
             st.subheader("사고 정보 입력란")
             st.markdown(" ")
+            work_clf = st.text_input("**✅ 공종**", value = "ex) 철큰콘크리트공사")
             work_process = st.text_input("**✅ 작업 프로세스**", value = "ex) 절단작업, 타설작업")
             accident_object = st.text_input("**✅ 사고객체**", value = "ex) 공구류")
             human_accident = st.text_input("**✅ 인적사고**", value = "ex) 끼임")
@@ -37,22 +38,23 @@ def main() :
         st.session_state.messages.append(HumanMessage(content = prompt)) 
         
         # 사고 정보와 결합 
-        combined_prompt = f"""
-        {prompt} 로 인해 사고가 발생했습니다.
+        csv_prompt = f""""{work_clf} 중 {prompt} 로 인해 사고가 발생했습니다.
         해당 사고는 {work_process} 중 발생했으며, 관련 사고 객체는 {accident_object} 입니다.
-        이로 인한 인적피해는 {human_accident} 이고, 물적피해는 {property_accident} 로 확인됩니다.
-        재발 방지 대책 및 향후 조치 계획은 무엇인가요?
-        """
+        이로 인한 인적피해는 {human_accident} 이고, 물적피해는 {property_accident} 로 확인됩니다."""
         
-        st.chat_message("user").write(combined_prompt)
+        pdf_prompt =  f""""{work_clf}({accident_object}) 관련 {work_process} 중 {prompt}으로 인해 발생한 
+        인적사고 : {human_accident} 및 물적사고 : {property_accident} 에 대한 안전 작업 지침 및 안전 조치 사항"""
+    
+        st.chat_message("user").write(csv_prompt)
 
         # AI 응답처리 
         with st.chat_message("assistant") : 
             
             # 초기 상태 설정
             initial_state = {
-                "question" : combined_prompt , 
-                "pdf_docs" : [],
+                "question" : csv_prompt , 
+                "pdf_prompt" : pdf_prompt ,
+                "pdf_docs" : [] ,
                 "csv_docs" : [] , 
                 "generation" : ""
             }
@@ -90,7 +92,7 @@ def main() :
         ]
         
         # 사이드바 입력값 초기화
-        keys_to_clear = ["work_process", "accident_object", "human_accident", "property_accident"]
+        keys_to_clear = ["work_clf" , "work_process", "accident_object", "human_accident", "property_accident"]
         
         for key in keys_to_clear:
             if key in st.session_state:

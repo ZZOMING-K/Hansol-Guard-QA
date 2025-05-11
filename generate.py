@@ -96,5 +96,6 @@ def generate_response(llm_model, pdf_docs, csv_docs, question):
         return final_response
     
     except Exception as e:
+        
         print(f"final response error: {e}")
         return initial_response
