@@ -27,7 +27,7 @@ pdf_db , qa_db = load_vector_db(hf_embeddings)
 pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , 5 , pdf_dataset , csv_dataset) 
 
 #load llm 
-llm = load_llm()
+llm_model , tokenizer = load_llm(model_id = "Qwen/QwQ-32B")
 
 class GraphState(TypedDict) :
     question : str
@@ -66,9 +66,8 @@ def generate(state) :
 
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
-    
-    rag_chain = generate_response(llm , pdf_docs, csv_docs, question) 
-    
+    response = generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question)
+ 
     generation = rag_chain.invoke({"pdf_docs": pdf_docs, "csv_docs" : csv_docs ,"question": quetion})
 
     return {"pdf_docs" : pdf_docs , "csv_docs" : csv_docs , "question" : question , "generation" : generation}

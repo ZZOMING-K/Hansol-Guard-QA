@@ -70,8 +70,7 @@ def main() :
                             with st.expander("👷🏼 예시 검색 결과") : 
                                 for i , result in enumerate(state["csv_docs"]) :
                                     st.write(f"Source {i} : {result}")
-                        
-                        if node_name == "grade_documents":  # 필터링 된 pdf 문서 
+                                    
                             with st.expander("🔍 PDF 검색 결과") :
                                 for i , result in enumerate(state["pdf_docs"]) :
                                     st.write(f"Source {i} : {result}") 
