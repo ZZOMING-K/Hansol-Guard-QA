@@ -1,3 +1,4 @@
+#main.py
 import os 
 import streamlit as st
 from langchain_core.messages import AIMessage , HumanMessage
@@ -12,13 +13,13 @@ def main() :
     st.title("Hansol Guard QA ChatBot :construction:")
 
     with st.sidebar : 
-            st.subheader("사고 정보 입력란")
-            st.markdown(" ")
-            work_clf = st.text_input("**✅ 공종**", value = "ex) 철큰콘크리트공사")
-            work_process = st.text_input("**✅ 작업 프로세스**", value = "ex) 절단작업, 타설작업")
-            accident_object = st.text_input("**✅ 사고객체**", value = "ex) 공구류")
-            human_accident = st.text_input("**✅ 인적사고**", value = "ex) 끼임")
-            property_accident = st.text_input("**✅ 물적사고**", value = "ex) 없음")
+        st.subheader("사고 정보 입력란")
+        st.markdown(" ")
+        work_clf = st.text_input("**✅ 공종**", value = "ex) 철큰콘크리트공사")
+        work_process = st.text_input("**✅ 작업 프로세스**", value = "ex) 절단작업, 타설작업")
+        accident_object = st.text_input("**✅ 사고객체**", value = "ex) 공구류")
+        human_accident = st.text_input("**✅ 인적사고**", value = "ex) 끼임")
+        property_accident = st.text_input("**✅ 물적사고**", value = "ex) 없음")
             
     # 세션상태 초기화 
     if 'message' not in st.session_state : 
@@ -38,26 +39,36 @@ def main() :
         st.session_state.messages.append(HumanMessage(content = prompt)) 
         
         # 사고 정보와 결합 
-        csv_prompt = f""""{work_clf} 중 {prompt} 로 인해 사고가 발생했습니다.
-        해당 사고는 {work_process} 중 발생했으며, 관련 사고 객체는 {accident_object} 입니다.
-        이로 인한 인적피해는 {human_accident} 이고, 물적피해는 {property_accident} 로 확인됩니다."""
+        accicdent_prompt = f"""
+        - 공종 : {work_clf}
+        - 작업프로세스 : {work_process}
+        - 사고객체 : {accident_object}
+        - 인적사고 : {human_accident}
+        - 물적사고 : {property_accident}
+        - 사고원인 : {prompt}
+        위 사고 상황에 대한 재발방지 대책 및 향후조치계획은 무엇인가요? 
+        """
         
-        pdf_prompt =  f""""{work_clf}({accident_object}) 관련 {work_process} 중 {prompt}으로 인해 발생한 
-        인적사고 : {human_accident} 및 물적사고 : {property_accident} 에 대한 안전 작업 지침 및 안전 조치 사항"""
-    
-        st.chat_message("user").write(csv_prompt)
+        st.chat_message("user").write(accicdent_prompt)
 
         # AI 응답처리 
         with st.chat_message("assistant") : 
             
             # 초기 상태 설정
             initial_state = {
-                "question" : csv_prompt , 
-                "pdf_prompt" : pdf_prompt ,
+                # 공종, 작업프로세스, 사고객체, 인적사고, 물적사고, 사고원인
+                "question" : [ work_clf, work_process, accident_object, human_accident, property_accident, prompt ] , 
+                "pdf_prompt" : pdf_prompt ,  
+                "csv_prompt" : csv_prompt ,
                 "pdf_docs" : [] ,
                 "csv_docs" : [] , 
-                "generation" : ""
+                "think_response" : "",
+                "final_response" : "",
+                "generator" : None
             }
+            
+            thinking_placeholder = st.empty()
+            response_placeholder = st.empty()
             
             try : 
                 # 그래프 실행 및 상태 업데이트 (노드 실행결과를 step 으로 받아 줌)
@@ -75,11 +86,29 @@ def main() :
                                 for i , result in enumerate(state["pdf_docs"]) :
                                     st.write(f"Source {i} : {result}") 
                         
-                        if "generation" in state :
-                            last_msg = state["generation"]
-                            st.session_state.messages.append(AIMessage(content = last_msg))
-                            st.markdown(last_msg)
-                            
+                         if node_name == "generate":
+                            if "generator" in state:
+                                
+                                # 스트리밍 제너레이터가 있으면 실행
+                                generator = state["generator"]
+                                
+                                thinking_content = ""
+                                response_content = ""
+                                
+                                for chunk in generator(): #streaming
+                                    thinking_content = chunk["think_response"]
+                                    response_content = chunk["final_response"]
+                                    
+                                    with st.expander("💭 사고 과정", expanded=False):
+                                        thinking_placeholder.markdown(thinking_content)
+                                    
+                                    # 최종 응답 업데이트 (mode_change가 True일 때 표시 시작)
+                                    if chunk["mode_change"] or response_content:
+                                        response_placeholder.markdown(response_content)
+                                
+                                # 최종 응답 저장
+                                st.session_state.messages.append(AIMessage(content=response_content))
+                                
             except Exception as e :
                 st.error(f"Error 발생 : {str(e)}")
 
