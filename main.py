@@ -14,11 +14,11 @@ def main() :
     with st.sidebar : 
         st.subheader("사고 정보 입력란")
         st.markdown(" ")
-        work_clf = st.text_input("**✅ 공종**", value = "ex) 철큰콘크리트공사")
-        work_process = st.text_input("**✅ 작업 프로세스**", value = "ex) 절단작업, 타설작업")
-        accident_object = st.text_input("**✅ 사고객체**", value = "ex) 공구류")
-        human_accident = st.text_input("**✅ 인적사고**", value = "ex) 끼임")
-        property_accident = st.text_input("**✅ 물적사고**", value = "ex) 없음")
+        work_clf = st.text_input("**✅ 공종**", placeholder = "ex) 철큰콘크리트공사")
+        work_process = st.text_input("**✅ 작업 프로세스**", placeholder = "ex) 절단작업, 타설작업")
+        accident_object = st.text_input("**✅ 사고객체**", placeholder = "ex) 공구류")
+        human_accident = st.text_input("**✅ 인적사고**", placeholder = "ex) 끼임")
+        property_accident = st.text_input("**✅ 물적사고**", placeholder = "ex) 없음")
             
     # 세션상태 초기화 
     if 'message' not in st.session_state : 
@@ -44,7 +44,7 @@ def main() :
         사고객체 : {accident_object}
         인적사고 : {human_accident}
         물적사고 : {property_accident}
-        사고원인 : {prompt}
+        사고원인 : {prompt}\n
         위 사고 상황에 대한 재발방지 대책 및 향후조치계획은 무엇인가요? 
         """
         
@@ -58,7 +58,7 @@ def main() :
             # 초기 상태 설정
             initial_state = {
                 # 공종, 작업프로세스, 사고객체, 인적사고, 물적사고, 사고원인
-                "question" : question , 
+                "question" : question_list , 
                 "pdf_prompt" : "" ,  
                 "csv_prompt" : "" ,
                 "pdf_docs" : [] ,
@@ -90,7 +90,6 @@ def main() :
                         if node_name == "generate":
                             if "generator" in state:
                                 
-                                # 스트리밍 제너레이터가 있으면 실행
                                 generator = state["generator"]
                                 
                                 thinking_content = ""

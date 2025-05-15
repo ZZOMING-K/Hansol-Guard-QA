@@ -52,11 +52,11 @@ def transfomr_query(state) :
     property_accident = question[4] # 물적사고
     prompt = question[5] # 사고원인 
     
-    csv_prompt = f""""{work_clf} 중 {prompt} 로 인해 사고가 발생했습니다.
+    csv_prompt = f"""{work_clf} 중 {prompt} 로 인해 사고가 발생했습니다.
     해당 사고는 {work_process} 중 발생했으며, 관련 사고 객체는 {accident_object} 입니다.
     이로 인한 인적피해는 {human_accident} 이고, 물적피해는 {property_accident} 로 확인됩니다."""
         
-    pdf_prompt =  f""""{work_clf}({accident_object}) 관련 {work_process} 중 {prompt}으로 인해 발생한 
+    pdf_prompt =  f"""{work_clf}({accident_object}) 관련 {work_process} 중 {prompt}으로 인해 발생한 
     인적사고 : {human_accident} 및 물적사고 : {property_accident} 에 대한 안전 작업 지침 및 안전 조치 사항"""
     
     return { "pdf_prompt" : pdf_prompt , "csv_prompt" : csv_prompt }

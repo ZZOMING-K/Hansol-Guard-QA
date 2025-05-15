@@ -22,7 +22,7 @@ def load_llm(model_id = "Qwen/QwQ-32B") :
 
 def generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question):
 
-    llm = llm_model
+    model = llm_model
 
     system_message = (
       "당신은 건설 안전 사고 분석 및 예방 대책 수립에 전문성을 갖춘 안전관리 전문가입니다.\n"
@@ -35,7 +35,7 @@ def generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question):
     )
     
     user_message = (
-        "[발생한 사고]\n"
+        "[현재 발생한 사고]\n"
         f"{question}\n"
         "[유사 사고 사례 및 대응책]\n"
         f"{csv_docs}\n"
@@ -74,7 +74,7 @@ def generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question):
     
         thread.start()
         
-        think_model = True 
+        think_mode = True 
         think_response , final_response = "" , ""
 
         for text in streamer:
