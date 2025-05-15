@@ -1,4 +1,3 @@
-#main.py
 import os 
 import streamlit as st
 from langchain_core.messages import AIMessage , HumanMessage
@@ -40,16 +39,18 @@ def main() :
         
         # 사고 정보와 결합 
         accicdent_prompt = f"""
-        - 공종 : {work_clf}
-        - 작업프로세스 : {work_process}
-        - 사고객체 : {accident_object}
-        - 인적사고 : {human_accident}
-        - 물적사고 : {property_accident}
-        - 사고원인 : {prompt}
+        공종 : {work_clf}
+        작업프로세스 : {work_process}
+        사고객체 : {accident_object}
+        인적사고 : {human_accident}
+        물적사고 : {property_accident}
+        사고원인 : {prompt}
         위 사고 상황에 대한 재발방지 대책 및 향후조치계획은 무엇인가요? 
         """
         
         st.chat_message("user").write(accicdent_prompt)
+        
+        question_list = [ work_clf, work_process, accident_object, human_accident, property_accident, prompt ]
 
         # AI 응답처리 
         with st.chat_message("assistant") : 
@@ -57,7 +58,7 @@ def main() :
             # 초기 상태 설정
             initial_state = {
                 # 공종, 작업프로세스, 사고객체, 인적사고, 물적사고, 사고원인
-                "question" : [ work_clf, work_process, accident_object, human_accident, property_accident, prompt ] , 
+                "question" : question , 
                 "pdf_prompt" : "" ,  
                 "csv_prompt" : "" ,
                 "pdf_docs" : [] ,
@@ -80,11 +81,11 @@ def main() :
                         if node_name == "retrieve": 
                             with st.expander("👷🏼 예시 검색 결과") : 
                                 for i , result in enumerate(state["csv_docs"]) :
-                                    st.write(f"Source {i} : {result}")
+                                    st.write(f"{result}")
                                     
                             with st.expander("🔍 PDF 검색 결과") :
                                 for i , result in enumerate(state["pdf_docs"]) :
-                                    st.write(f"Source {i} : {result}") 
+                                    st.write(f"{result}") 
                         
                         if node_name == "generate":
                             if "generator" in state:

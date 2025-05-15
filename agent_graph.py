@@ -45,7 +45,7 @@ def transfomr_query(state) :
     
     question = state['question']
     
-    wokk_clf  = question[0] # 공종 
+    work_clf  = question[0] # 공종 
     work_process = question[1] # 작업프로세스 
     accident_object = question[2] # 사고객체
     human_accident = question[3] # 인적사고
@@ -80,14 +80,14 @@ def retrieve(state) :
         question = doc.metadata['question']
         answer = doc.metadata['answer']
       
-        example_prompt.append(f'유사 사고 사례:{context} {question}\n대응책:{answer}\n\n')
+        example_prompt.append(f'유사 사고 사례 {i} : {context} {question}\n\n대응책:{answer}\n\n')
         
     for i , doc in enumerate(pdf_docs) : 
         
         context = doc.page_content
         source = doc.metadata['source'].split('/')[-1].split('md')[0]
         
-        related_pdf_prompt.append(f'안전 지침서 {i} : {source}\n{context}\n')
+        related_pdf_prompt.append(f'안전 지침서 {i} : {source}\n\n{context}\n')
 
     return {"pdf_docs" : related_pdf_prompt, "csv_docs" : example_prompt, "csv_prompt" : csv_prompt}
 
@@ -95,7 +95,7 @@ def generate(state) :
 
     print("--GENERATE--")
 
-    quesiton = state['csv_prompt']
+    question = state['csv_prompt']
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
     
