@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
-from threading import Tread
+from threading import Thread
 
 def load_llm(model_id = "Qwen/QwQ-32B") : 
 
@@ -35,7 +35,7 @@ def generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question):
     )
     
     user_message = (
-        f"[발생한 사고]\n"
+        "[발생한 사고]\n"
         f"{question}\n"
         "[유사 사고 사례 및 대응책]\n"
         f"{csv_docs}\n"
@@ -59,7 +59,6 @@ def generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question):
     )
     
     streamer = TextIteratorStreamer(tokenizer , skip_prompt = True , skip_special_tokens = True)
-    
     
     def stream_generator() : 
     

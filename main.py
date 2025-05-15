@@ -58,8 +58,8 @@ def main() :
             initial_state = {
                 # 공종, 작업프로세스, 사고객체, 인적사고, 물적사고, 사고원인
                 "question" : [ work_clf, work_process, accident_object, human_accident, property_accident, prompt ] , 
-                "pdf_prompt" : pdf_prompt ,  
-                "csv_prompt" : csv_prompt ,
+                "pdf_prompt" : "" ,  
+                "csv_prompt" : "" ,
                 "pdf_docs" : [] ,
                 "csv_docs" : [] , 
                 "think_response" : "",
@@ -86,7 +86,7 @@ def main() :
                                 for i , result in enumerate(state["pdf_docs"]) :
                                     st.write(f"Source {i} : {result}") 
                         
-                         if node_name == "generate":
+                        if node_name == "generate":
                             if "generator" in state:
                                 
                                 # 스트리밍 제너레이터가 있으면 실행
