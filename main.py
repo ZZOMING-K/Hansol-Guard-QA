@@ -39,12 +39,12 @@ def main() :
         
         # 사고 정보와 결합 
         accicdent_prompt = f"""
-        공종 : {work_clf}
-        작업프로세스 : {work_process}
-        사고객체 : {accident_object}
-        인적사고 : {human_accident}
-        물적사고 : {property_accident}
-        사고원인 : {prompt}\n
+        - 공종 : {work_clf}
+        - 작업프로세스 : {work_process}
+        - 사고객체 : {accident_object}
+        - 인적사고 : {human_accident}
+        - 물적사고 : {property_accident}
+        - 사고원인 : {prompt}\n
         위 사고 상황에 대한 재발방지 대책 및 향후조치계획은 무엇인가요? 
         """
         

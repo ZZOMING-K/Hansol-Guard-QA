@@ -105,7 +105,7 @@ def generate(state) :
 
 workflow = StateGraph(GraphState)
 
-workflow.add_node("transform_query", retrieve) 
+workflow.add_node("transform_query", transform_query) 
 workflow.add_node("retrieve", retrieve)  
 workflow.add_node("generate", generate)  
 
