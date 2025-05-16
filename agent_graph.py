@@ -24,145 +24,98 @@ hf_embeddings = load_embedding_model(model_name = "intfloat/multilingual-e5-larg
 pdf_db , qa_db = load_vector_db(hf_embeddings) 
 
 # retriever  
-pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , 3 , pdf_dataset , csv_dataset) 
+
+pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , 5 , pdf_dataset , csv_dataset) 
 
 #load llm 
-llm = load_llm()
+llm_model , tokenizer = load_llm(model_id = "Qwen/QwQ-32B")
 
 class GraphState(TypedDict) :
-    question : str
-    pdf_question : str
-    generation : str
+    question : List[str]
+    csv_prompt : str
+    pdf_prompt : str
     pdf_docs : List[str]
     csv_docs : List[str]
-
-def transform_pdf_query(state) :
+    think_response : str
+    final_response : str
+    generator : object
     
-    system = """
-        당신은 건설 안전 분야 전문 쿼리 변환기입니다. 입력된 건설 사고 관련 질문을 안전보건작업지침 문서 벡터 검색에 최적화된 형태로 재작성하는 역할을 합니다.
-        """
-
-    re_write_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system),
-            (
-                "human",
-                "Here is the initial question: \n\n {question} \n Formulate an improved question.",
-            ),
-        ]
-    )
-
-    question_rewriter = re_write_prompt | llm | StrOutputParser()
-
+def transfomr_query(state) : 
+    
+    print("--TRANSFORM QUERY--")
+    
     question = state['question']
+    
+    work_clf  = question[0] # 공종 
+    work_process = question[1] # 작업프로세스 
+    accident_object = question[2] # 사고객체
+    human_accident = question[3] # 인적사고
+    property_accident = question[4] # 물적사고
+    prompt = question[5] # 사고원인 
+    
+    csv_prompt = f"""{work_clf} 중 {prompt} 로 인해 사고가 발생했습니다.
+    해당 사고는 {work_process} 중 발생했으며, 관련 사고 객체는 {accident_object} 입니다.
+    이로 인한 인적피해는 {human_accident} 이고, 물적피해는 {property_accident} 로 확인됩니다."""
+        
+    pdf_prompt =  f"""{work_clf}({accident_object}) 관련 {work_process} 중 {prompt}으로 인해 발생한 
+    인적사고 : {human_accident} 및 물적사고 : {property_accident} 에 대한 안전 작업 지침 및 안전 조치 사항"""
+    
+    return { "pdf_prompt" : pdf_prompt , "csv_prompt" : csv_prompt }
 
-    better_question = question_rewriter.invoke({"question": question})
-
-    print(better_question)
-
-    return {"pdf_question" : better_question}
+    
 
 def retrieve(state) :
 
     print("--RETRIEVE--")
 
-    csv_question = state['question'] # origin question
-    pdf_question = state['pdf_question'] # 재작성된 쿼리
+    csv_prompt = state['csv_prompt']
+    pdf_prompt = state['pdf_prompt'] 
 
-    csv_docs = csv_retriever.invoke(csv_question)
-    pdf_docs = pdf_retriever.invoke(pdf_question)
+    csv_docs = csv_retriever.invoke(csv_prompt)
+    pdf_docs = pdf_retriever.invoke(pdf_prompt)
     
-    example_prompt = []
+    example_prompt , related_pdf_prompt = [] , []
+
     
     for i , doc in enumerate(csv_docs) :
         
         context = doc.page_content
         question = doc.metadata['question']
         answer = doc.metadata['answer']
-      
-        example_prompt.append(f'question:{context} {question}\nanswer:{answer}\n\n')
+        example_prompt.append(f'유사 사고 사례 {i} : {context} {question}\n\n대응책:{answer}\n\n')
+        
+    for i , doc in enumerate(pdf_docs) : 
+        
+        context = doc.page_content
+        source = doc.metadata['source'].split('/')[-1].split('md')[0]
+        
+        related_pdf_prompt.append(f'안전 지침서 {i} : {source}\n\n{context}\n')
 
-    return {"pdf_docs" : pdf_docs , "csv_docs" : example_prompt , "question" : csv_question , "pdf_question" : pdf_question}
+    return {"pdf_docs" : related_pdf_prompt, "csv_docs" : example_prompt, "csv_prompt" : csv_prompt}
+
 
 def generate(state) :
 
     print("--GENERATE--")
 
-    question = state['question']
-
+    question = state['csv_prompt']
     pdf_docs = state['pdf_docs']
     csv_docs = state['csv_docs']
     
-    generation = generate_response(llm , pdf_docs, csv_docs, question) 
-    
-    return {"pdf_docs" : pdf_docs , "csv_docs" : csv_docs , "question" : question , "generation" : generation}
+    stream_generator = generate_response(llm_model, tokenizer, pdf_docs, csv_docs, question)
 
-def grade_documents(state) :
-    
-    class GradeDocuments(BaseModel):
-        """Binary score for relevance check on retrieved documents."""
-
-        binary_score: str = Field(
-            description="Documents are relevant to the question, 'yes' or 'no'"
-        )
-        
-    structured_llm_grader = llm.with_structured_output(GradeDocuments)
-
-    # Prompt
-    system = """You are a grader assessing relevance of a retrieved document to a user question. \n
-        It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-        If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
-        Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
-
-    grade_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system),
-            ("human", "Retrieved document: \n\n {pdf_docs} \n\n User question: {question}"),
-        ]
-    )
-
-    retrieval_grader = grade_prompt | structured_llm_grader
-
-    print("---CHECK PDF DOCUMENT RELEVANCE TO QUESTION---")
-
-    pdf_question = state["pdf_question"]
-
-    pdf_docs = state["pdf_docs"]
-
-    filtered_pdf_docs = []
-
-    for p_doc in pdf_docs :
-
-        score = retrieval_grader.invoke({"question" : pdf_question , "pdf_docs" : p_doc.page_content})
-
-        grade = score.binary_score
-
-        if grade == "yes":
-            print("---GRADE: DOCUMENT RELEVANT---")
-            filtered_pdf_docs.append(p_doc)
-        else:
-            print("---GRADE: DOCUMENT NOT RELEVANT---")
-            continue
-
-    if not filtered_pdf_docs:
-        print("참조할 안전보건지침서가 없습니다.")
-        filtered_pdf_docs.append("사고 관련 안전 지침서 없음.")
-
-    return {"pdf_docs" : filtered_pdf_docs , "pdf_question" : pdf_question}
-
+    return {"generator" : stream_generator , "think_response" : "" , "final_response" :  ""}
 
 workflow = StateGraph(GraphState)
 
+workflow.add_node("transform_query", transform_query) 
 workflow.add_node("retrieve", retrieve)  
-workflow.add_node("grade_documents", grade_documents)  
 workflow.add_node("generate", generate)  
-workflow.add_node("transform_query", transform_pdf_query) 
 
 # Build Graph
 workflow.add_edge(START, "transform_query") 
-workflow.add_edge("transform_query" , "retrieve") 
-workflow.add_edge("retrieve" , "grade_documents") 
-workflow.add_edge("grade_documents" , "generate") 
+workflow.add_edge("transform_query", "retrieve") 
+workflow.add_edge("retrieve" , "generate") 
 workflow.add_edge("generate" , END)
 
 # Compile
