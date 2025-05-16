@@ -66,12 +66,17 @@ def fill_data(data , st_model  = "BAAI/bge-m3", save_path = './data/prepro_data.
     return 
 
 
-def prepro_data(path) : 
+def prepro_data(path = './data/prepro_data.csv' , drop_col = False) : 
     
-    path = './data/prepro_data.csv' # 전처리된 데이터 경로
+    path = path # 전처리된 데이터 경로
     
-    data = pd.read_csv(path , index_col = 0)
-
+    data = pd.read_csv(path)
+    
+    if drop_col : 
+        col =  ['ID', '발생일시', '사고인지 시간', '날씨', '기온', '습도', '공사종류', '연면적', '층 정보','장소']
+        data = data.drop(col , axis = 1)
+    
+    data['공종'] = data['공종'].str.split('>').str[1].str.strip() # 공종 나누기
     data['부위'] = data['부위'].str.split('/').str[0].str.strip() # 부위 나누기
 
     data = data.drop_duplicates().reset_index(drop = True)

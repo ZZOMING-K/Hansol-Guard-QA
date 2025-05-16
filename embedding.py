@@ -36,22 +36,33 @@ def load_pdf_docs(pdf_path='./pdf2txt/'):
     )
     
     docs = loader.load()
-    docs_processed = split_documents(chunk_size=500, KB=docs)
+    docs_processed = split_documents(chunk_size=1000, KB=docs)
     return docs_processed
 
-def load_csv_docs(data):
+def load_csv_docs(data , answer_col = True):
 
     records = []
-    for _, row in data.iterrows():
-        records.append({
-            "context": (
-                f"'{row['공종']}' 중 {row['사고원인']}'로 인해 사고가 발생했습니다. "
-                f"해당 사고는 '{row['작업프로세스']}' 중 발생했으며, 관련 사고객체는 '{row['부위']}'입니다. "
-                f"이로 인한 인적피해는 '{row['인적사고']}' 이고, 물적피해는 '{row['물적사고']}'로 확인됩니다."
-            ),
-            "question": "해당 사고의 재발 방지 대책과 향후 조치 계획은 무엇인가요?",
-            "answer": row["재발방지대책 및 향후조치계획"]
-        })
+    
+    for _, row in data.iterrows() : 
+        if answer_col : 
+            records.append({
+                "context": (
+                    f"'{row['공종']}' 중 {row['사고원인']}'로 인해 사고가 발생했습니다. "
+                    f"해당 사고는 '{row['작업프로세스']}' 중 발생했으며, 관련 사고객체는 '{row['부위']}'입니다. "
+                    f"이로 인한 인적피해는 '{row['인적사고']}' 이고, 물적피해는 '{row['물적사고']}'로 확인됩니다."
+                ),
+                "question": "해당 사고의 재발 방지 대책과 향후 조치 계획은 무엇인가요?",
+                "answer": row["재발방지대책 및 향후조치계획"]
+            })
+        else :
+            records.append({
+                "context": (
+                    f"'{row['공종']}' 중 {row['사고원인']}'로 인해 사고가 발생했습니다. "
+                    f"해당 사고는 '{row['작업프로세스']}' 중 발생했으며, 관련 사고객체는 '{row['부위']}'입니다. "
+                    f"이로 인한 인적피해는 '{row['인적사고']}' 이고, 물적피해는 '{row['물적사고']}'로 확인됩니다."
+                ),
+                "question": "해당 사고의 재발 방지 대책과 향후 조치 계획은 무엇인가요?",
+            })
     
     combined_csv_data = pd.DataFrame(records)
     
