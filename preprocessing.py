@@ -66,6 +66,7 @@ def fill_data(data , st_model  = "BAAI/bge-m3", save_path = './data/prepro_data.
     return 
 
 
+
 def prepro_data(path = './data/prepro_data.csv' , drop_col = False) : 
     
     path = path # 전처리된 데이터 경로

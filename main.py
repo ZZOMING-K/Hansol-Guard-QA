@@ -19,6 +19,7 @@ def main() :
         accident_object = st.text_input("**✅ 사고객체**", placeholder = "ex) 공구류")
         human_accident = st.text_input("**✅ 인적사고**", placeholder = "ex) 끼임")
         property_accident = st.text_input("**✅ 물적사고**", placeholder = "ex) 없음")
+
             
     # 세션상태 초기화 
     if 'message' not in st.session_state : 
@@ -38,6 +39,7 @@ def main() :
         st.session_state.messages.append(HumanMessage(content = prompt)) 
         
         # 사고 정보와 결합 
+
         accicdent_prompt = f"""
         - 공종 : {work_clf}
         - 작업프로세스 : {work_process}
@@ -52,11 +54,13 @@ def main() :
         
         question_list = [ work_clf, work_process, accident_object, human_accident, property_accident, prompt ]
 
+
         # AI 응답처리 
         with st.chat_message("assistant") : 
             
             # 초기 상태 설정
             initial_state = {
+
                 # 공종, 작업프로세스, 사고객체, 인적사고, 물적사고, 사고원인
                 "question" : question_list , 
                 "pdf_prompt" : "" ,  
@@ -81,6 +85,7 @@ def main() :
                         if node_name == "retrieve": 
                             with st.expander("👷🏼 예시 검색 결과") : 
                                 for i , result in enumerate(state["csv_docs"]) :
+
                                     st.write(f"{result}")
                                     
                             with st.expander("🔍 PDF 검색 결과") :

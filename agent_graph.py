@@ -24,6 +24,7 @@ hf_embeddings = load_embedding_model(model_name = "intfloat/multilingual-e5-larg
 pdf_db , qa_db = load_vector_db(hf_embeddings) 
 
 # retriever  
+
 pdf_retriever , csv_retriever = get_retriever(pdf_db , qa_db , 5 , pdf_dataset , csv_dataset) 
 
 #load llm 
@@ -62,6 +63,7 @@ def transfomr_query(state) :
     return { "pdf_prompt" : pdf_prompt , "csv_prompt" : csv_prompt }
 
     
+
 def retrieve(state) :
 
     print("--RETRIEVE--")
@@ -73,13 +75,13 @@ def retrieve(state) :
     pdf_docs = pdf_retriever.invoke(pdf_prompt)
     
     example_prompt , related_pdf_prompt = [] , []
+
     
     for i , doc in enumerate(csv_docs) :
         
         context = doc.page_content
         question = doc.metadata['question']
         answer = doc.metadata['answer']
-      
         example_prompt.append(f'유사 사고 사례 {i} : {context} {question}\n\n대응책:{answer}\n\n')
         
     for i , doc in enumerate(pdf_docs) : 
@@ -90,6 +92,7 @@ def retrieve(state) :
         related_pdf_prompt.append(f'안전 지침서 {i} : {source}\n\n{context}\n')
 
     return {"pdf_docs" : related_pdf_prompt, "csv_docs" : example_prompt, "csv_prompt" : csv_prompt}
+
 
 def generate(state) :
 

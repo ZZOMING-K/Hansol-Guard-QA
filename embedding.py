@@ -36,6 +36,7 @@ def load_pdf_docs(pdf_path='./pdf2txt/'):
     )
     
     docs = loader.load()
+
     docs_processed = split_documents(chunk_size=1000, KB=docs)
     return docs_processed
 
@@ -96,3 +97,4 @@ def load_vector_db(embedding_model):
     )
 
     return pdf_db, csv_db
+
